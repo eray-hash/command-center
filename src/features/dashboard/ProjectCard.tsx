@@ -45,7 +45,7 @@ export function ProjectCard({ project }: { project: Project }) {
             style={{ width: total ? `${(doneCount / total) * 100}%` : '0%' }}
           />
         </div>
-        <div className="mt-1 flex justify-between text-xs text-white/50">
+        <div className="mt-1 flex flex-col gap-0.5 text-xs text-white/50">
           <span>{doneCount}/{total} Meilensteine</span>
           {nextMilestone && <span>Nächster: {nextMilestone.title}{nextMilestone.eta ? ` (${nextMilestone.eta})` : ''}</span>}
         </div>
