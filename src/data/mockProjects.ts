@@ -1,4 +1,8 @@
-import type { Project } from '../types/project'
+import type { Project, Task } from '../types/project'
+
+function tasks(entries: Array<[string, boolean]>): Task[] {
+  return entries.map(([title, done], i) => ({ id: `t${i}`, title, done }))
+}
 
 // Demo-Daten für den Fall, dass keine Supabase-Verbindung konfiguriert ist.
 export const mockProjects: Project[] = [
@@ -10,9 +14,40 @@ export const mockProjects: Project[] = [
     currentTask: 'Immobilienradar-Integration',
     includeInDashboard: true,
     milestones: [
-      { id: 'm1', title: 'CRM-Mockup live', done: true, eta: null, sortOrder: 1 },
-      { id: 'm2', title: 'Immobilienradar mit Exposé-Export', done: false, eta: '2026-10-01', sortOrder: 2 },
-      { id: 'm3', title: 'Buchhaltungssoftware (Kontoauszug-Scan)', done: false, eta: null, sortOrder: 3 },
+      {
+        id: 'm1',
+        title: 'CRM-Mockup live',
+        done: true,
+        eta: null,
+        sortOrder: 1,
+        tasks: tasks([
+          ['Klickbares Mockup gebaut', true],
+          ['Auf GitHub Pages veröffentlicht', true],
+        ]),
+      },
+      {
+        id: 'm2',
+        title: 'Immobilienradar mit Exposé-Export',
+        done: false,
+        eta: '2026-10-01',
+        sortOrder: 2,
+        tasks: tasks([
+          ['Datenquelle anbinden', true],
+          ['Exposé-PDF-Export', false],
+          ['Filter- und Suchlogik', false],
+        ]),
+      },
+      {
+        id: 'm3',
+        title: 'Buchhaltungssoftware (Kontoauszug-Scan)',
+        done: false,
+        eta: null,
+        sortOrder: 3,
+        tasks: tasks([
+          ['Kontoauszug-Scan → Texterkennung', false],
+          ['Pivot-Tabellen-Export', false],
+        ]),
+      },
     ],
   },
   {
@@ -23,8 +58,26 @@ export const mockProjects: Project[] = [
     currentTask: null,
     includeInDashboard: true,
     milestones: [
-      { id: 'm1', title: 'F-Monogramm finalisiert', done: true, eta: null, sortOrder: 1 },
-      { id: 'm2', title: 'DPMA-Markencheck', done: true, eta: null, sortOrder: 2 },
+      {
+        id: 'm1',
+        title: 'F-Monogramm finalisiert',
+        done: true,
+        eta: null,
+        sortOrder: 1,
+        tasks: tasks([
+          ['Logo-Konzept abgestimmt', true],
+          ['Vektorisiert (SVG)', true],
+          ['Negativ- und Einfarbig-Variante', true],
+        ]),
+      },
+      {
+        id: 'm2',
+        title: 'DPMA-Markencheck',
+        done: true,
+        eta: null,
+        sortOrder: 2,
+        tasks: tasks([['Markenrecherche durchgeführt', true]]),
+      },
     ],
   },
   {
@@ -32,14 +85,70 @@ export const mockProjects: Project[] = [
     name: 'Fundament Command Center',
     kind: 'eigen',
     status: 'in_arbeit',
-    currentTask: 'PWA-Grundgerüst + Datenmodell',
+    currentTask: 'Aufklappbare Meilensteine + Sprach-Agenda',
     includeInDashboard: true,
     milestones: [
-      { id: 'm1', title: 'Datenmodell + Auth (2 Nutzer)', done: false, eta: null, sortOrder: 1 },
-      { id: 'm2', title: 'Echtzeit-Projektübersicht', done: false, eta: null, sortOrder: 2 },
-      { id: 'm3', title: 'Sprachsteuerung', done: false, eta: null, sortOrder: 3 },
-      { id: 'm4', title: 'Meeting-Mitschnitt + Protokoll', done: false, eta: null, sortOrder: 4 },
-      { id: 'm5', title: 'Automatische Claude-Session-Anbindung', done: false, eta: null, sortOrder: 5 },
+      {
+        id: 'm1',
+        title: 'Datenmodell + Auth (2 Nutzer)',
+        done: false,
+        eta: null,
+        sortOrder: 1,
+        tasks: tasks([
+          ['Supabase-Schema geschrieben', true],
+          ['PWA-Grundgerüst installierbar', true],
+          ['Login-Screen gebaut', true],
+          ['Supabase-Account verbinden (wartet auf neue E-Mail)', false],
+          ['Schema live anwenden', false],
+          ['Echtzeit-Sync verdrahten', false],
+        ]),
+      },
+      {
+        id: 'm2',
+        title: 'Echtzeit-Projektübersicht',
+        done: false,
+        eta: null,
+        sortOrder: 2,
+        tasks: tasks([
+          ['Aufklappbare Meilensteine mit Task-Details', true],
+          ['Live-Abgleich zwischen zwei Geräten', false],
+        ]),
+      },
+      {
+        id: 'm3',
+        title: 'Sprachsteuerung',
+        done: false,
+        eta: null,
+        sortOrder: 3,
+        tasks: tasks([
+          ['Web-Speech-API-Hook', true],
+          ['Sprach-Agenda: Idee per Sprache aufnehmen', true],
+          ['Fragen ans Dashboard stellen (Voice-Query)', false],
+        ]),
+      },
+      {
+        id: 'm4',
+        title: 'Meeting-Mitschnitt + Protokoll',
+        done: false,
+        eta: null,
+        sortOrder: 4,
+        tasks: tasks([
+          ['Consent-Abfrage zu Gesprächsbeginn', false],
+          ['Aufnahme + Transkription', false],
+          ['Automatische Protokollablage', false],
+        ]),
+      },
+      {
+        id: 'm5',
+        title: 'Automatische Claude-Session-Anbindung',
+        done: false,
+        eta: null,
+        sortOrder: 5,
+        tasks: tasks([
+          ['Opt-in/Opt-out pro Session', false],
+          ['Sync-Job Claude-Sessions → Supabase', false],
+        ]),
+      },
     ],
   },
 ]

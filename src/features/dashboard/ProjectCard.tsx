@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import type { Project } from '../../types/project'
+import { MilestoneList } from './MilestoneList'
+import { VoiceCaptureField } from '../agenda/VoiceCaptureField'
 
 const statusLabel: Record<Project['status'], string> = {
   geplant: 'Geplant',
@@ -14,10 +17,18 @@ const statusColor: Record<Project['status'], string> = {
   abgeschlossen: 'bg-emerald-600',
 }
 
-export function ProjectCard({ project }: { project: Project }) {
-  const doneCount = project.milestones.filter((m) => m.done).length
-  const total = project.milestones.length
-  const nextMilestone = project.milestones.find((m) => !m.done)
+export function ProjectCard({
+  project,
+  onAddAgendaItem,
+}: {
+  project: Project
+  onAddAgendaItem: (text: string, projectId: string) => void
+}) {
+  const [showCapture, setShowCapture] = useState(false)
+
+  const allTasks = project.milestones.flatMap((m) => m.tasks)
+  const doneCount = allTasks.filter((t) => t.done).length
+  const total = allTasks.length
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-3">
@@ -45,10 +56,29 @@ export function ProjectCard({ project }: { project: Project }) {
             style={{ width: total ? `${(doneCount / total) * 100}%` : '0%' }}
           />
         </div>
-        <div className="mt-1 flex flex-col gap-0.5 text-xs text-white/50">
-          <span>{doneCount}/{total} Meilensteine</span>
-          {nextMilestone && <span>Nächster: {nextMilestone.title}{nextMilestone.eta ? ` (${nextMilestone.eta})` : ''}</span>}
-        </div>
+        <div className="mt-1 text-xs text-white/50">{doneCount}/{total} Einzelschritte erledigt</div>
+      </div>
+
+      <MilestoneList milestones={project.milestones} />
+
+      <div className="border-t border-white/10 pt-2">
+        {showCapture ? (
+          <VoiceCaptureField
+            placeholder="Was soll noch mit rein?"
+            onSubmit={(text) => {
+              onAddAgendaItem(text, project.id)
+              setShowCapture(false)
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowCapture(true)}
+            className="text-xs text-white/40 hover:text-brand-teal"
+          >
+            + Agenda-Punkt für dieses Projekt
+          </button>
+        )}
       </div>
     </div>
   )
