@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-violet: #7C3AED;
+  --color-brand-teal: #14B8A6;
+  --color-brand-bg: #0F0F14;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-brand-bg);
+  color: #F4F4F5;
+}
