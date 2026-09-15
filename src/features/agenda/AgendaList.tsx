@@ -4,12 +4,14 @@ import { VoiceCaptureField } from './VoiceCaptureField'
 
 export function AgendaList({
   items,
+  error,
   projects,
   onAdd,
   onToggle,
   onRemove,
 }: {
   items: AgendaItem[]
+  error: string | null
   projects: Project[]
   onAdd: (text: string) => void
   onToggle: (id: string) => void
@@ -32,6 +34,10 @@ export function AgendaList({
       </p>
 
       <VoiceCaptureField placeholder="Neue Idee oder Agenda-Punkt…" onSubmit={onAdd} />
+
+      {error && (
+        <p className="mt-2 rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-400">⚠️ {error}</p>
+      )}
 
       {open.length > 0 && (
         <ul className="mt-4 flex flex-col gap-2">

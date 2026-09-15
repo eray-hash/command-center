@@ -77,6 +77,7 @@ export function DashboardScreen() {
 
       <AgendaList
         items={agenda.items}
+        error={agenda.error}
         projects={projects}
         onAdd={(text) => agenda.add(text, null)}
         onToggle={agenda.toggle}
