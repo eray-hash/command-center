@@ -1,56 +1,58 @@
 import { useState } from 'react'
-import type { Milestone } from '../../types/project'
+import type { Milestone, Task, TaskStatus } from '../../types/project'
+import { KanbanBoard } from '../kanban/KanbanBoard'
 
-function Chevron({ open }: { open: boolean }) {
-  return (
-    <span className={`inline-block text-white/40 transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
-  )
-}
+export function MilestoneList({
+  milestones,
+  onMoveTask,
+  onSaveTask,
+}: {
+  milestones: Milestone[]
+  onMoveTask: (milestoneId: string, taskId: string, status: TaskStatus) => void
+  onSaveTask: (milestoneId: string, taskId: string, patch: Partial<Task>) => void
+}) {
+  const [openMilestone, setOpenMilestone] = useState<Milestone | null>(null)
 
-export function MilestoneList({ milestones }: { milestones: Milestone[] }) {
-  const [openId, setOpenId] = useState<string | null>(null)
+  // Nach einer Mutation zeigt das Board weiter den aktuellen Stand des offenen Meilensteins.
+  const liveOpenMilestone = openMilestone
+    ? milestones.find((m) => m.id === openMilestone.id) ?? null
+    : null
 
   return (
     <div className="flex flex-col gap-1">
       {[...milestones]
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((milestone) => {
-          const isOpen = openId === milestone.id
-          const doneTasks = milestone.tasks.filter((t) => t.done).length
+          const done = milestone.tasks.filter((t) => t.status === 'erledigt').length
+          const total = milestone.tasks.length
 
           return (
-            <div key={milestone.id} className="rounded-md">
-              <button
-                type="button"
-                onClick={() => setOpenId(isOpen ? null : milestone.id)}
-                className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-white/5"
-              >
-                <Chevron open={isOpen} />
-                <span className={milestone.done ? 'text-white/40 line-through' : ''}>{milestone.title}</span>
-                <span className="ml-auto shrink-0 text-xs text-white/40">
-                  {doneTasks}/{milestone.tasks.length}
-                  {milestone.eta ? ` · ${milestone.eta}` : ''}
-                </span>
-              </button>
-
-              {isOpen && (
-                <ul className="ml-6 flex flex-col gap-1 border-l border-white/10 py-1 pl-3">
-                  {milestone.tasks.length === 0 && (
-                    <li className="text-xs text-white/30">Noch keine Einzelschritte hinterlegt</li>
-                  )}
-                  {milestone.tasks.map((task) => (
-                    <li key={task.id} className="flex items-center gap-2 text-xs">
-                      <span>{task.done ? '✅' : '⬜️'}</span>
-                      <span className={task.done ? 'text-white/40 line-through' : 'text-white/70'}>
-                        {task.title}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <button
+              key={milestone.id}
+              type="button"
+              onClick={() => setOpenMilestone(milestone)}
+              className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-white/5"
+            >
+              <span className="text-white/40">›</span>
+              <span className={done === total && total > 0 ? 'text-white/40 line-through' : ''}>
+                {milestone.title}
+              </span>
+              <span className="ml-auto shrink-0 text-xs text-white/40">
+                {done}/{total}
+                {milestone.eta ? ` · ${milestone.eta}` : ''}
+              </span>
+            </button>
           )
         })}
+
+      {liveOpenMilestone && (
+        <KanbanBoard
+          milestone={liveOpenMilestone}
+          onClose={() => setOpenMilestone(null)}
+          onMoveTask={(taskId, status) => onMoveTask(liveOpenMilestone.id, taskId, status)}
+          onSaveTask={(taskId, patch) => onSaveTask(liveOpenMilestone.id, taskId, patch)}
+        />
+      )}
     </div>
   )
 }

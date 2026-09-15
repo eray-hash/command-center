@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Project } from '../../types/project'
+import type { Project, Task, TaskStatus } from '../../types/project'
 import { MilestoneList } from './MilestoneList'
 import { VoiceCaptureField } from '../agenda/VoiceCaptureField'
 
@@ -17,18 +17,30 @@ const statusColor: Record<Project['status'], string> = {
   abgeschlossen: 'bg-emerald-600',
 }
 
+const prioLabel: Record<Project['prio'], string> = { niedrig: 'Niedrig', mittel: 'Mittel', hoch: 'Hoch' }
+const prioColor: Record<Project['prio'], string> = {
+  niedrig: 'border-zinc-500 text-zinc-400',
+  mittel: 'border-amber-500 text-amber-400',
+  hoch: 'border-red-500 text-red-400',
+}
+
 export function ProjectCard({
   project,
   onAddAgendaItem,
+  onMoveTask,
+  onSaveTask,
 }: {
   project: Project
   onAddAgendaItem: (text: string, projectId: string) => void
+  onMoveTask: (projectId: string, milestoneId: string, taskId: string, status: TaskStatus) => void
+  onSaveTask: (projectId: string, milestoneId: string, taskId: string, patch: Partial<Task>) => void
 }) {
   const [showCapture, setShowCapture] = useState(false)
 
   const allTasks = project.milestones.flatMap((m) => m.tasks)
-  const doneCount = allTasks.filter((t) => t.done).length
+  const doneCount = allTasks.filter((t) => t.status === 'erledigt').length
   const total = allTasks.length
+  const pct = total ? Math.round((doneCount / total) * 100) : 0
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-3">
@@ -37,9 +49,14 @@ export function ProjectCard({
           <h3 className="font-semibold leading-tight">{project.name}</h3>
           <span className="text-xs text-white/50">{project.kind === 'kunde' ? 'Kundenprojekt' : 'Eigenes Projekt'}</span>
         </div>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white ${statusColor[project.status]}`}>
-          {statusLabel[project.status]}
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium text-white ${statusColor[project.status]}`}>
+            {statusLabel[project.status]}
+          </span>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${prioColor[project.prio]}`}>
+            Prio {prioLabel[project.prio]}
+          </span>
+        </div>
       </div>
 
       {project.currentTask && (
@@ -51,15 +68,16 @@ export function ProjectCard({
 
       <div>
         <div className="h-1.5 w-full rounded-full bg-white/10">
-          <div
-            className="h-1.5 rounded-full bg-brand-violet"
-            style={{ width: total ? `${(doneCount / total) * 100}%` : '0%' }}
-          />
+          <div className="h-1.5 rounded-full bg-brand-violet" style={{ width: `${pct}%` }} />
         </div>
-        <div className="mt-1 text-xs text-white/50">{doneCount}/{total} Einzelschritte erledigt</div>
+        <div className="mt-1 text-xs text-white/50">{pct}% · {doneCount}/{total} Einzelschritte erledigt</div>
       </div>
 
-      <MilestoneList milestones={project.milestones} />
+      <MilestoneList
+        milestones={project.milestones}
+        onMoveTask={(milestoneId, taskId, status) => onMoveTask(project.id, milestoneId, taskId, status)}
+        onSaveTask={(milestoneId, taskId, patch) => onSaveTask(project.id, milestoneId, taskId, patch)}
+      />
 
       <div className="border-t border-white/10 pt-2">
         {showCapture ? (
