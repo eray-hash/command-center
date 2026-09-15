@@ -33,6 +33,11 @@ export function TaskDetailModal({
     onClose()
   }
 
+  function toggleClaudeHandoff() {
+    onSave({ fuerClaude: !draft.fuerClaude })
+    onClose()
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
@@ -42,8 +47,20 @@ export function TaskDetailModal({
         <input
           value={draft.title}
           onChange={(e) => field('title', e.target.value)}
-          className="mb-4 w-full bg-transparent text-lg font-semibold outline-none"
+          className="mb-2 w-full bg-transparent text-lg font-semibold outline-none"
         />
+
+        <button
+          type="button"
+          onClick={toggleClaudeHandoff}
+          className={`mb-4 rounded-full px-3 py-1 text-xs font-medium transition ${
+            draft.fuerClaude
+              ? 'bg-brand-violet/20 text-brand-violet hover:bg-brand-violet/30'
+              : 'bg-white/10 text-white/60 hover:bg-white/20'
+          }`}
+        >
+          {draft.fuerClaude ? '🤖 An Claude übergeben — zurücknehmen' : '🤖 An Claude übergeben'}
+        </button>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Status">

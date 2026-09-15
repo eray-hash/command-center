@@ -26,6 +26,7 @@ function task(
     erledigtAm: extra.erledigtAm ?? null,
     protokoll: extra.protokoll ?? null,
     taskvorschlaege: extra.taskvorschlaege ?? null,
+    fuerClaude: extra.fuerClaude ?? false,
   }
 }
 

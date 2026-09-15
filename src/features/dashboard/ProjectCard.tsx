@@ -26,12 +26,12 @@ const prioColor: Record<Project['prio'], string> = {
 
 export function ProjectCard({
   project,
-  onAddAgendaItem,
+  onAddIdea,
   onMoveTask,
   onSaveTask,
 }: {
   project: Project
-  onAddAgendaItem: (text: string, projectId: string) => void
+  onAddIdea: (text: string, projectId: string) => void
   onMoveTask: (projectId: string, milestoneId: string, taskId: string, status: TaskStatus) => void
   onSaveTask: (projectId: string, milestoneId: string, taskId: string, patch: Partial<Task>) => void
 }) {
@@ -82,9 +82,9 @@ export function ProjectCard({
       <div className="border-t border-white/10 pt-2">
         {showCapture ? (
           <VoiceCaptureField
-            placeholder="Was soll noch mit rein?"
+            placeholder="Neue Idee für dieses Projekt…"
             onSubmit={(text) => {
-              onAddAgendaItem(text, project.id)
+              onAddIdea(text, project.id)
               setShowCapture(false)
             }}
           />
@@ -94,7 +94,7 @@ export function ProjectCard({
             onClick={() => setShowCapture(true)}
             className="text-xs text-white/40 hover:text-brand-teal"
           >
-            + Agenda-Punkt für dieses Projekt
+            + Idee für dieses Projekt (landet als Task)
           </button>
         )}
       </div>

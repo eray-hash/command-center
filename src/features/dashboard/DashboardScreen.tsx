@@ -1,7 +1,5 @@
 import { isSupabaseConfigured } from '../../lib/supabaseClient'
 import { ProjectCard } from './ProjectCard'
-import { AgendaList } from '../agenda/AgendaList'
-import { useAgenda } from '../../lib/useAgenda'
 import { useProjects } from '../../lib/useProjects'
 import { useWorkspaces } from '../../lib/useWorkspaces'
 import { WorkspaceTabs } from '../workspace/WorkspaceTabs'
@@ -9,12 +7,15 @@ import { VoiceQuery } from '../voice/VoiceQuery'
 import { RecordingButton } from '../recording/RecordingButton'
 import { AssignRecordingModal } from '../recording/AssignRecordingModal'
 import { useRecordings } from '../../lib/useRecordings'
+import { IdeaCaptureBar } from '../idea/IdeaCaptureBar'
+import { ClaudeHandoffList } from '../claude/ClaudeHandoffList'
 
 export function DashboardScreen() {
-  const { projects, loading, moveTask, updateTask, createProject, logCallOnProject } = useProjects()
+  const { projects, loading, moveTask, updateTask, createProject, logCallOnProject, createIdeaTask } = useProjects()
   const { workspaces, selectedId, setSelectedId, addWorkspace } = useWorkspaces()
-  const agenda = useAgenda()
   const recordings = useRecordings()
+
+  const sharedWorkspaceId = workspaces.find((w) => w.kind === 'gemeinsam')?.id ?? selectedId
 
   const visibleProjects = projects
     .filter((p) => p.workspaceId === selectedId)
@@ -24,7 +25,6 @@ export function DashboardScreen() {
     })
 
   const nextPendingRecording = recordings.pendingAssignment[0]
-  const sharedWorkspaceId = workspaces.find((w) => w.kind === 'gemeinsam')?.id ?? selectedId
 
   async function handleAssignExisting(projectId: string | null) {
     if (!nextPendingRecording) return
@@ -75,14 +75,14 @@ export function DashboardScreen() {
         onCreate={addWorkspace}
       />
 
-      <AgendaList
-        items={agenda.items}
-        error={agenda.error}
+      <ClaudeHandoffList
         projects={projects}
-        onAdd={(text) => agenda.add(text, null)}
-        onToggle={agenda.toggle}
-        onRemove={agenda.remove}
+        onUnflag={(projectId, milestoneId, taskId) =>
+          updateTask(projectId, milestoneId, taskId, { fuerClaude: false })
+        }
       />
+
+      <IdeaCaptureBar onSubmit={(text) => createIdeaTask(text, null, sharedWorkspaceId)} />
 
       {loading ? (
         <p className="text-white/50">Lade Projekte…</p>
@@ -94,7 +94,7 @@ export function DashboardScreen() {
             <ProjectCard
               key={project.id}
               project={project}
-              onAddAgendaItem={(text, projectId) => agenda.add(text, projectId)}
+              onAddIdea={(text, projectId) => createIdeaTask(text, projectId, sharedWorkspaceId)}
               onMoveTask={moveTask}
               onSaveTask={updateTask}
             />

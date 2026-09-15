@@ -4,6 +4,8 @@ import { mockProjects } from '../data/mockProjects'
 import { isSupabaseConfigured, supabase } from './supabaseClient'
 
 const STORAGE_KEY = 'command-center:projects'
+const IDEEN_PROJECT_NAME = 'Ideen & Neukunden'
+const IDEEN_MILESTONE_TITLE = 'Ideen'
 
 interface TaskRow {
   id: string
@@ -23,6 +25,7 @@ interface TaskRow {
   erledigt_am: string | null
   protokoll: string | null
   taskvorschlaege: string | null
+  fuer_claude: boolean
 }
 
 interface MilestoneRow {
@@ -44,6 +47,29 @@ interface ProjectRow {
   milestones: MilestoneRow[]
 }
 
+function blankTask(overrides: Partial<Task> & Pick<Task, 'title'>): Task {
+  return {
+    id: crypto.randomUUID(),
+    status: 'offen',
+    prio: 'mittel',
+    kunde: null,
+    abteilung: null,
+    zustaendig: null,
+    naechsterSchritt: null,
+    fragen: null,
+    benoetigteInfos: null,
+    geplanteZeitStunden: null,
+    istZeitStunden: null,
+    umsatzEuro: null,
+    wiedervorlage: null,
+    erledigtAm: null,
+    protokoll: null,
+    taskvorschlaege: null,
+    fuerClaude: false,
+    ...overrides,
+  }
+}
+
 function mapTask(row: TaskRow): Task {
   return {
     id: row.id,
@@ -63,6 +89,7 @@ function mapTask(row: TaskRow): Task {
     erledigtAm: row.erledigt_am,
     protokoll: row.protokoll,
     taskvorschlaege: row.taskvorschlaege,
+    fuerClaude: row.fuer_claude,
   }
 }
 
@@ -108,6 +135,7 @@ function toTaskRowPatch(patch: Partial<Task>): Record<string, unknown> {
     erledigtAm: 'erledigt_am',
     protokoll: 'protokoll',
     taskvorschlaege: 'taskvorschlaege',
+    fuerClaude: 'fuer_claude',
   }
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(patch)) {
@@ -197,14 +225,20 @@ export function useProjects() {
     updateTask(projectId, milestoneId, taskId, patch)
   }
 
-  async function createProject(name: string, workspaceId: string): Promise<string> {
+  async function createProject(
+    name: string,
+    workspaceId: string,
+    overrides: Partial<Pick<Project, 'kind' | 'status'>> = {},
+  ): Promise<string> {
     const id = crypto.randomUUID()
+    const kind = overrides.kind ?? 'kunde'
+    const status = overrides.status ?? 'geplant'
     const newProject: Project = {
       id,
       workspaceId,
       name,
-      kind: 'kunde',
-      status: 'geplant',
+      kind,
+      status,
       prio: 'mittel',
       currentTask: null,
       includeInDashboard: true,
@@ -218,8 +252,8 @@ export function useProjects() {
           id,
           workspace_id: workspaceId,
           name,
-          kind: 'kunde',
-          status: 'geplant',
+          kind,
+          status,
           prio: 'mittel',
           include_in_dashboard: true,
         })
@@ -236,62 +270,38 @@ export function useProjects() {
     return newProject.id
   }
 
-  // Legt (falls nötig) einen "Telefonate"-Meilenstein an und trägt das Gespräch als
-  // erledigten Task mit Ist-Zeit (Abrechnung) und Protokoll-Text ein.
-  async function logCallOnProject(projectId: string, transcript: string, durationSec: number, occurredAt: string) {
+  // Findet einen Meilenstein per Titel in einem (aktuellen) Projekt-Stand oder legt ihn an.
+  async function ensureMilestone(projectId: string, title: string): Promise<string> {
     const project = projects.find((p) => p.id === projectId)
-    if (!project) return
+    const existing = project?.milestones.find((m) => m.title === title)
+    if (existing) return existing.id
 
-    const dateLabel = new Date(occurredAt).toLocaleDateString('de-DE')
-    const hours = Math.round((durationSec / 3600) * 100) / 100
-    let milestone = project.milestones.find((m) => m.title === 'Telefonate')
+    const milestoneId = crypto.randomUUID()
+    const sortOrder = Math.max(0, ...(project?.milestones.map((m) => m.sortOrder) ?? [0])) + 1
+    const milestone = { id: milestoneId, title, eta: null, sortOrder, tasks: [] }
 
-    if (!milestone) {
-      const milestoneId = crypto.randomUUID()
-      const sortOrder = Math.max(0, ...project.milestones.map((m) => m.sortOrder)) + 1
-      milestone = { id: milestoneId, title: 'Telefonate', eta: null, sortOrder, tasks: [] }
+    setProjects((prev) =>
+      prev.map((p) => (p.id !== projectId ? p : { ...p, milestones: [...p.milestones, milestone] })),
+    )
 
-      setProjects((prev) =>
-        prev.map((p) => (p.id !== projectId ? p : { ...p, milestones: [...p.milestones, milestone!] })),
-      )
-
-      if (supabase) {
-        const { error } = await supabase
-          .from('milestones')
-          .insert({ id: milestoneId, project_id: projectId, title: 'Telefonate', sort_order: sortOrder })
-        if (error) console.error('Meilenstein "Telefonate" konnte nicht angelegt werden:', error.message)
-      }
+    if (supabase) {
+      const { error } = await supabase
+        .from('milestones')
+        .insert({ id: milestoneId, project_id: projectId, title, sort_order: sortOrder })
+      if (error) console.error(`Meilenstein "${title}" konnte nicht angelegt werden:`, error.message)
     }
 
-    const task: Task = {
-      id: crypto.randomUUID(),
-      title: `Telefonat – ${dateLabel}`,
-      status: 'erledigt',
-      prio: 'mittel',
-      kunde: null,
-      abteilung: null,
-      zustaendig: null,
-      naechsterSchritt: null,
-      fragen: null,
-      benoetigteInfos: null,
-      geplanteZeitStunden: null,
-      istZeitStunden: hours,
-      umsatzEuro: null,
-      wiedervorlage: null,
-      erledigtAm: occurredAt.slice(0, 10),
-      protokoll: transcript || null,
-      taskvorschlaege: null,
-    }
+    return milestoneId
+  }
 
+  async function addTaskToMilestone(projectId: string, milestoneId: string, task: Task) {
     setProjects((prev) =>
       prev.map((p) =>
         p.id !== projectId
           ? p
           : {
               ...p,
-              milestones: p.milestones.map((m) =>
-                m.id !== milestone!.id ? m : { ...m, tasks: [...m.tasks, task] },
-              ),
+              milestones: p.milestones.map((m) => (m.id !== milestoneId ? m : { ...m, tasks: [...m.tasks, task] })),
             },
       ),
     )
@@ -299,61 +309,61 @@ export function useProjects() {
     if (supabase) {
       const { error } = await supabase.from('tasks').insert({
         id: task.id,
-        milestone_id: milestone.id,
+        milestone_id: milestoneId,
         title: task.title,
-        status: 'erledigt',
-        prio: 'mittel',
-        ist_zeit_stunden: hours,
+        status: task.status,
+        prio: task.prio,
+        ist_zeit_stunden: task.istZeitStunden,
         erledigt_am: task.erledigtAm,
         protokoll: task.protokoll,
+        fuer_claude: task.fuerClaude,
       })
-      if (error) console.error('Telefonat-Task konnte nicht gespeichert werden:', error.message)
+      if (error) console.error('Task konnte nicht gespeichert werden:', error.message)
     }
   }
 
-  function addAgendaAsTask(projectId: string, milestoneId: string, title: string) {
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      title,
-      status: 'offen',
-      prio: 'mittel',
-      kunde: null,
-      abteilung: null,
-      zustaendig: null,
-      naechsterSchritt: null,
-      fragen: null,
-      benoetigteInfos: null,
-      geplanteZeitStunden: null,
-      istZeitStunden: null,
-      umsatzEuro: null,
-      wiedervorlage: null,
-      erledigtAm: null,
-      protokoll: null,
-      taskvorschlaege: null,
-    }
+  // Legt (falls nötig) einen "Telefonate"-Meilenstein an und trägt das Gespräch als
+  // erledigten Task mit Ist-Zeit (Abrechnung) und Protokoll-Text ein.
+  async function logCallOnProject(projectId: string, transcript: string, durationSec: number, occurredAt: string) {
+    const milestoneId = await ensureMilestone(projectId, 'Telefonate')
+    const dateLabel = new Date(occurredAt).toLocaleDateString('de-DE')
+    const hours = Math.round((durationSec / 3600) * 100) / 100
 
-    setProjects((prev) =>
-      prev.map((project) =>
-        project.id !== projectId
-          ? project
-          : {
-              ...project,
-              milestones: project.milestones.map((milestone) =>
-                milestone.id !== milestoneId ? milestone : { ...milestone, tasks: [...milestone.tasks, newTask] },
-              ),
-            },
-      ),
-    )
+    const task = blankTask({
+      title: `Telefonat – ${dateLabel}`,
+      status: 'erledigt',
+      istZeitStunden: hours,
+      erledigtAm: occurredAt.slice(0, 10),
+      protokoll: transcript || null,
+    })
 
-    if (supabase) {
-      supabase
-        .from('tasks')
-        .insert({ id: newTask.id, milestone_id: milestoneId, title, status: 'offen', prio: 'mittel' })
-        .then(({ error }) => {
-          if (error) console.error('Task konnte nicht angelegt werden:', error.message)
-        })
-    }
+    await addTaskToMilestone(projectId, milestoneId, task)
   }
 
-  return { projects, loading, updateTask, moveTask, addAgendaAsTask, createProject, logCallOnProject }
+  // Idee per Sprache/Text: wird direkt als Task angelegt. Ohne Projektbezug landet sie
+  // im Sammelprojekt "Ideen & Neukunden" (gemeinsamer Bereich), bis sie eingeordnet wird.
+  async function createIdeaTask(text: string, projectId: string | null, sharedWorkspaceId: string) {
+    let targetProjectId = projectId
+
+    if (!targetProjectId) {
+      const existing = projects.find((p) => p.name === IDEEN_PROJECT_NAME)
+      targetProjectId = existing
+        ? existing.id
+        : await createProject(IDEEN_PROJECT_NAME, sharedWorkspaceId, { kind: 'eigen', status: 'in_arbeit' })
+    }
+
+    const milestoneId = await ensureMilestone(targetProjectId, IDEEN_MILESTONE_TITLE)
+    const task = blankTask({ title: text })
+    await addTaskToMilestone(targetProjectId, milestoneId, task)
+  }
+
+  return {
+    projects,
+    loading,
+    updateTask,
+    moveTask,
+    createProject,
+    logCallOnProject,
+    createIdeaTask,
+  }
 }

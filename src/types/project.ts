@@ -30,6 +30,7 @@ export interface Task {
   erledigtAm: string | null
   protokoll: string | null
   taskvorschlaege: string | null
+  fuerClaude: boolean
 }
 
 export interface Milestone {
