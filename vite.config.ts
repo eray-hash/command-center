@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/command-center/',
   plugins: [
     react(),
     tailwindcss(),
@@ -18,7 +19,8 @@ export default defineConfig({
         theme_color: '#7C3AED',
         background_color: '#0F0F14',
         display: 'standalone',
-        start_url: '/',
+        start_url: '/command-center/',
+        scope: '/command-center/',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
