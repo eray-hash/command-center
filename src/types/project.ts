@@ -28,6 +28,8 @@ export interface Task {
   umsatzEuro: number | null
   wiedervorlage: string | null
   erledigtAm: string | null
+  protokoll: string | null
+  taskvorschlaege: string | null
 }
 
 export interface Milestone {

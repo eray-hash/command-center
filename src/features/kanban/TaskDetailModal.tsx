@@ -166,6 +166,28 @@ export function TaskDetailModal({
               className={inputClass}
             />
           </Field>
+
+          {draft.protokoll !== null && (
+            <>
+              <Field label="Protokoll (Gesprächsmitschrift)">
+                <textarea
+                  value={draft.protokoll ?? ''}
+                  onChange={(e) => field('protokoll', e.target.value || null)}
+                  rows={4}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Taskvorschläge (von Claude — noch nicht befüllt)">
+                <textarea
+                  value={draft.taskvorschlaege ?? ''}
+                  onChange={(e) => field('taskvorschlaege', e.target.value || null)}
+                  placeholder="Leer — kann in einer Claude-Code-Session aus dem Protokoll befüllt werden."
+                  rows={3}
+                  className={inputClass}
+                />
+              </Field>
+            </>
+          )}
         </div>
 
         <div className="mt-4 flex justify-end gap-2">

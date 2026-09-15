@@ -21,6 +21,8 @@ interface TaskRow {
   umsatz_euro: number | null
   wiedervorlage: string | null
   erledigt_am: string | null
+  protokoll: string | null
+  taskvorschlaege: string | null
 }
 
 interface MilestoneRow {
@@ -59,6 +61,8 @@ function mapTask(row: TaskRow): Task {
     umsatzEuro: row.umsatz_euro,
     wiedervorlage: row.wiedervorlage,
     erledigtAm: row.erledigt_am,
+    protokoll: row.protokoll,
+    taskvorschlaege: row.taskvorschlaege,
   }
 }
 
@@ -102,6 +106,8 @@ function toTaskRowPatch(patch: Partial<Task>): Record<string, unknown> {
     umsatzEuro: 'umsatz_euro',
     wiedervorlage: 'wiedervorlage',
     erledigtAm: 'erledigt_am',
+    protokoll: 'protokoll',
+    taskvorschlaege: 'taskvorschlaege',
   }
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(patch)) {
@@ -231,8 +237,8 @@ export function useProjects() {
   }
 
   // Legt (falls nötig) einen "Telefonate"-Meilenstein an und trägt das Gespräch als
-  // erledigten Task mit Ist-Zeit ein, damit die Dauer für die Abrechnung sichtbar ist.
-  async function logCallOnProject(projectId: string, durationSec: number, occurredAt: string) {
+  // erledigten Task mit Ist-Zeit (Abrechnung) und Protokoll-Text ein.
+  async function logCallOnProject(projectId: string, transcript: string, durationSec: number, occurredAt: string) {
     const project = projects.find((p) => p.id === projectId)
     if (!project) return
 
@@ -273,6 +279,8 @@ export function useProjects() {
       umsatzEuro: null,
       wiedervorlage: null,
       erledigtAm: occurredAt.slice(0, 10),
+      protokoll: transcript || null,
+      taskvorschlaege: null,
     }
 
     setProjects((prev) =>
@@ -297,6 +305,7 @@ export function useProjects() {
         prio: 'mittel',
         ist_zeit_stunden: hours,
         erledigt_am: task.erledigtAm,
+        protokoll: task.protokoll,
       })
       if (error) console.error('Telefonat-Task konnte nicht gespeichert werden:', error.message)
     }
@@ -319,6 +328,8 @@ export function useProjects() {
       umsatzEuro: null,
       wiedervorlage: null,
       erledigtAm: null,
+      protokoll: null,
+      taskvorschlaege: null,
     }
 
     setProjects((prev) =>

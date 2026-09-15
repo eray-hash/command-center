@@ -29,14 +29,26 @@ export function DashboardScreen() {
   async function handleAssignExisting(projectId: string | null) {
     if (!nextPendingRecording) return
     recordings.assignRecording(nextPendingRecording.id, projectId)
-    if (projectId) await logCallOnProject(projectId, nextPendingRecording.durationSec, nextPendingRecording.createdAt)
+    if (projectId) {
+      await logCallOnProject(
+        projectId,
+        nextPendingRecording.transcript,
+        nextPendingRecording.durationSec,
+        nextPendingRecording.createdAt,
+      )
+    }
   }
 
   async function handleAssignNew(name: string) {
     if (!nextPendingRecording) return
     const projectId = await createProject(name, sharedWorkspaceId)
     recordings.assignRecording(nextPendingRecording.id, projectId)
-    await logCallOnProject(projectId, nextPendingRecording.durationSec, nextPendingRecording.createdAt)
+    await logCallOnProject(
+      projectId,
+      nextPendingRecording.transcript,
+      nextPendingRecording.durationSec,
+      nextPendingRecording.createdAt,
+    )
     setSelectedId(sharedWorkspaceId) // neues Projekt landet im gemeinsamen Bereich — dorthin wechseln, damit man es sofort sieht
   }
 
@@ -53,7 +65,7 @@ export function DashboardScreen() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <VoiceQuery projects={projects} />
-        <RecordingButton onSaved={(blob, durationSec) => recordings.addRecording(blob, durationSec)} />
+        <RecordingButton onSaved={(transcript, durationSec) => recordings.addRecording(transcript, durationSec)} />
       </div>
 
       <WorkspaceTabs
@@ -81,7 +93,6 @@ export function DashboardScreen() {
             <ProjectCard
               key={project.id}
               project={project}
-              recordings={recordings.items.filter((r) => r.projectId === project.id)}
               onAddAgendaItem={(text, projectId) => agenda.add(text, projectId)}
               onMoveTask={moveTask}
               onSaveTask={updateTask}

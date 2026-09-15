@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import type { RecordingMeta } from '../types/recording'
-import { saveBlob, deleteBlob } from './recordingsDb'
 
 const STORAGE_KEY = 'command-center:recordings'
 
@@ -21,9 +20,8 @@ function save(items: RecordingMeta[]) {
   }
 }
 
-// Aufnahmen liegen aktuell nur lokal in diesem Browser (IndexedDB), noch nicht in der
-// Cloud gesichert. Bevor Audiodaten von Kundengesprächen dauerhaft in Supabase Storage
-// landen, sollte die Aufbewahrungsdauer/Zugriffsregel bewusst festgelegt werden.
+// Es wird nur die Text-Mitschrift gespeichert, keine Audiodatei — reicht als Protokoll
+// und ist datensparsamer als das Original-Gespräch dauerhaft vorzuhalten.
 export function useRecordings() {
   const [items, setItems] = useState<RecordingMeta[]>(load)
 
@@ -31,13 +29,12 @@ export function useRecordings() {
     save(items)
   }, [items])
 
-  async function addRecording(blob: Blob, durationSec: number) {
-    const id = crypto.randomUUID()
-    await saveBlob(id, blob)
+  function addRecording(transcript: string, durationSec: number) {
     const meta: RecordingMeta = {
-      id,
+      id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       durationSec,
+      transcript,
       projectId: null,
       assigned: false,
     }
@@ -48,8 +45,7 @@ export function useRecordings() {
     setItems((prev) => prev.map((r) => (r.id === id ? { ...r, projectId, assigned: true } : r)))
   }
 
-  async function removeRecording(id: string) {
-    await deleteBlob(id)
+  function removeRecording(id: string) {
     setItems((prev) => prev.filter((r) => r.id !== id))
   }
 

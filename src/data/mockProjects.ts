@@ -24,6 +24,8 @@ function task(
     umsatzEuro: extra.umsatzEuro ?? null,
     wiedervorlage: extra.wiedervorlage ?? null,
     erledigtAm: extra.erledigtAm ?? null,
+    protokoll: extra.protokoll ?? null,
+    taskvorschlaege: extra.taskvorschlaege ?? null,
   }
 }
 

@@ -1,25 +1,23 @@
-import { useState } from 'react'
-import { useAudioRecorder } from '../../hooks/useAudioRecorder'
+import { useRef } from 'react'
+import { useLiveTranscription } from '../../hooks/useLiveTranscription'
 
-export function RecordingButton({ onSaved }: { onSaved: (blob: Blob, durationSec: number) => void }) {
-  const { supported, recording, error, start, stop } = useAudioRecorder()
-  const [saving, setSaving] = useState(false)
+export function RecordingButton({ onSaved }: { onSaved: (transcript: string, durationSec: number) => void }) {
+  const { supported, listening, liveText, start, stop } = useLiveTranscription()
+  const startedAtRef = useRef(0)
 
   if (!supported) {
-    return (
-      <p className="text-xs text-white/30">Aufnahme in diesem Browser nicht verfügbar.</p>
-    )
+    return <p className="text-xs text-white/30">Protokoll-Aufnahme in diesem Browser nicht verfügbar.</p>
   }
 
-  async function handleClick() {
-    if (recording) {
-      setSaving(true)
-      const result = await stop()
-      if (result) onSaved(result.blob, result.durationSec)
-      setSaving(false)
+  function handleClick() {
+    if (listening) {
+      const transcript = stop()
+      const durationSec = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000))
+      if (transcript) onSaved(transcript, durationSec)
       return
     }
-    await start()
+    startedAtRef.current = Date.now()
+    start()
   }
 
   return (
@@ -28,24 +26,26 @@ export function RecordingButton({ onSaved }: { onSaved: (blob: Blob, durationSec
         <button
           type="button"
           onClick={handleClick}
-          disabled={saving}
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg transition disabled:opacity-50 ${
-            recording ? 'animate-pulse bg-red-600' : 'bg-brand-teal'
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg transition ${
+            listening ? 'animate-pulse bg-red-600' : 'bg-brand-teal'
           }`}
-          title={recording ? 'Aufnahme stoppen' : 'Gespräch aufzeichnen'}
+          title={listening ? 'Protokoll beenden' : 'Gespräch als Protokoll mitschreiben'}
         >
-          {recording ? '⏹️' : '🔴'}
+          {listening ? '⏹️' : '📝'}
         </button>
         <div>
           <h2 className="text-sm font-semibold text-white/80">
-            {recording ? 'Aufnahme läuft…' : 'Gespräch aufzeichnen'}
+            {listening ? 'Protokoll läuft…' : 'Gespräch protokollieren'}
           </h2>
           <p className="text-xs text-white/40">
-            Vorher ansagen: „Ich zeichne das zur Protokollierung auf, ist das okay?"
+            Vorher ansagen: „Ich schreibe das zur Protokollierung mit, ist das okay?" — es wird nur der Text
+            gespeichert, keine Audiodatei.
           </p>
         </div>
       </div>
-      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+      {listening && (
+        <p className="mt-3 max-h-24 overflow-y-auto text-xs italic text-white/50">{liveText || '…höre zu…'}</p>
+      )}
     </div>
   )
 }
