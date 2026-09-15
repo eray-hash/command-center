@@ -5,11 +5,16 @@ import { useAgenda } from '../../lib/useAgenda'
 import { useProjects } from '../../lib/useProjects'
 import { useWorkspaces } from '../../lib/useWorkspaces'
 import { WorkspaceTabs } from '../workspace/WorkspaceTabs'
+import { VoiceQuery } from '../voice/VoiceQuery'
+import { RecordingButton } from '../recording/RecordingButton'
+import { AssignRecordingModal } from '../recording/AssignRecordingModal'
+import { useRecordings } from '../../lib/useRecordings'
 
 export function DashboardScreen() {
   const { projects, loading, moveTask, updateTask } = useProjects()
   const { workspaces, selectedId, setSelectedId, addWorkspace } = useWorkspaces()
   const agenda = useAgenda()
+  const recordings = useRecordings()
 
   const visibleProjects = projects
     .filter((p) => p.workspaceId === selectedId)
@@ -17,6 +22,8 @@ export function DashboardScreen() {
       const order = { hoch: 0, mittel: 1, niedrig: 2 }
       return order[a.prio] - order[b.prio]
     })
+
+  const nextPendingRecording = recordings.pendingAssignment[0]
 
   return (
     <div className="min-h-screen px-4 py-6 sm:px-6">
@@ -28,6 +35,11 @@ export function DashboardScreen() {
           </span>
         )}
       </header>
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <VoiceQuery projects={projects} />
+        <RecordingButton onSaved={(blob, durationSec) => recordings.addRecording(blob, durationSec)} />
+      </div>
 
       <WorkspaceTabs
         workspaces={workspaces}
@@ -60,6 +72,15 @@ export function DashboardScreen() {
             />
           ))}
         </div>
+      )}
+
+      {nextPendingRecording && (
+        <AssignRecordingModal
+          recording={nextPendingRecording}
+          projects={projects}
+          onAssign={(projectId) => recordings.assignRecording(nextPendingRecording.id, projectId)}
+          onDiscard={() => recordings.removeRecording(nextPendingRecording.id)}
+        />
       )}
     </div>
   )
