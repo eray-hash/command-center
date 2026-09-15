@@ -2,9 +2,11 @@ import { useState, type FormEvent } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
 export function LoginScreen() {
+  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
@@ -12,8 +14,23 @@ export function LoginScreen() {
     if (!supabase) return
     setLoading(true)
     setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
+    setInfo(null)
+
+    if (mode === 'signup') {
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      if (error) {
+        setError(error.message)
+      } else if (data.session) {
+        // E-Mail-Bestätigung im Projekt deaktiviert — direkt eingeloggt.
+      } else {
+        setInfo('Konto erstellt. Bitte bestätige die E-Mail, die wir dir geschickt haben, und melde dich danach an.')
+        setMode('login')
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) setError(error.message)
+    }
+
     setLoading(false)
   }
 
@@ -36,15 +53,28 @@ export function LoginScreen() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            minLength={6}
             className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-teal"
           />
           {error && <p className="text-sm text-red-400">{error}</p>}
+          {info && <p className="text-sm text-brand-teal">{info}</p>}
           <button
             type="submit"
             disabled={loading}
             className="mt-1 rounded-md bg-brand-violet px-3 py-2 text-sm font-medium disabled:opacity-50"
           >
-            {loading ? 'Anmelden…' : 'Anmelden'}
+            {loading ? '…' : mode === 'login' ? 'Anmelden' : 'Konto erstellen'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === 'login' ? 'signup' : 'login')
+              setError(null)
+              setInfo(null)
+            }}
+            className="text-xs text-white/40 hover:text-white/70"
+          >
+            {mode === 'login' ? 'Noch kein Konto? Registrieren' : 'Schon ein Konto? Anmelden'}
           </button>
         </div>
       </form>
