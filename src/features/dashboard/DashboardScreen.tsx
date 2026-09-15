@@ -11,7 +11,7 @@ import { AssignRecordingModal } from '../recording/AssignRecordingModal'
 import { useRecordings } from '../../lib/useRecordings'
 
 export function DashboardScreen() {
-  const { projects, loading, moveTask, updateTask } = useProjects()
+  const { projects, loading, moveTask, updateTask, createProject, logCallOnProject } = useProjects()
   const { workspaces, selectedId, setSelectedId, addWorkspace } = useWorkspaces()
   const agenda = useAgenda()
   const recordings = useRecordings()
@@ -24,6 +24,21 @@ export function DashboardScreen() {
     })
 
   const nextPendingRecording = recordings.pendingAssignment[0]
+  const sharedWorkspaceId = workspaces.find((w) => w.kind === 'gemeinsam')?.id ?? selectedId
+
+  async function handleAssignExisting(projectId: string | null) {
+    if (!nextPendingRecording) return
+    recordings.assignRecording(nextPendingRecording.id, projectId)
+    if (projectId) await logCallOnProject(projectId, nextPendingRecording.durationSec, nextPendingRecording.createdAt)
+  }
+
+  async function handleAssignNew(name: string) {
+    if (!nextPendingRecording) return
+    const projectId = await createProject(name, sharedWorkspaceId)
+    recordings.assignRecording(nextPendingRecording.id, projectId)
+    await logCallOnProject(projectId, nextPendingRecording.durationSec, nextPendingRecording.createdAt)
+    setSelectedId(sharedWorkspaceId) // neues Projekt landet im gemeinsamen Bereich — dorthin wechseln, damit man es sofort sieht
+  }
 
   return (
     <div className="min-h-screen px-4 py-6 sm:px-6">
@@ -66,6 +81,7 @@ export function DashboardScreen() {
             <ProjectCard
               key={project.id}
               project={project}
+              recordings={recordings.items.filter((r) => r.projectId === project.id)}
               onAddAgendaItem={(text, projectId) => agenda.add(text, projectId)}
               onMoveTask={moveTask}
               onSaveTask={updateTask}
@@ -78,7 +94,8 @@ export function DashboardScreen() {
         <AssignRecordingModal
           recording={nextPendingRecording}
           projects={projects}
-          onAssign={(projectId) => recordings.assignRecording(nextPendingRecording.id, projectId)}
+          onAssignExisting={handleAssignExisting}
+          onAssignNew={handleAssignNew}
           onDiscard={() => recordings.removeRecording(nextPendingRecording.id)}
         />
       )}

@@ -191,6 +191,117 @@ export function useProjects() {
     updateTask(projectId, milestoneId, taskId, patch)
   }
 
+  async function createProject(name: string, workspaceId: string): Promise<string> {
+    const id = crypto.randomUUID()
+    const newProject: Project = {
+      id,
+      workspaceId,
+      name,
+      kind: 'kunde',
+      status: 'geplant',
+      prio: 'mittel',
+      currentTask: null,
+      includeInDashboard: true,
+      milestones: [],
+    }
+
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          id,
+          workspace_id: workspaceId,
+          name,
+          kind: 'kunde',
+          status: 'geplant',
+          prio: 'mittel',
+          include_in_dashboard: true,
+        })
+        .select()
+        .single()
+      if (error) {
+        console.error('Projekt konnte nicht angelegt werden:', error.message)
+      } else if (data) {
+        newProject.id = data.id
+      }
+    }
+
+    setProjects((prev) => [...prev, newProject])
+    return newProject.id
+  }
+
+  // Legt (falls nötig) einen "Telefonate"-Meilenstein an und trägt das Gespräch als
+  // erledigten Task mit Ist-Zeit ein, damit die Dauer für die Abrechnung sichtbar ist.
+  async function logCallOnProject(projectId: string, durationSec: number, occurredAt: string) {
+    const project = projects.find((p) => p.id === projectId)
+    if (!project) return
+
+    const dateLabel = new Date(occurredAt).toLocaleDateString('de-DE')
+    const hours = Math.round((durationSec / 3600) * 100) / 100
+    let milestone = project.milestones.find((m) => m.title === 'Telefonate')
+
+    if (!milestone) {
+      const milestoneId = crypto.randomUUID()
+      const sortOrder = Math.max(0, ...project.milestones.map((m) => m.sortOrder)) + 1
+      milestone = { id: milestoneId, title: 'Telefonate', eta: null, sortOrder, tasks: [] }
+
+      setProjects((prev) =>
+        prev.map((p) => (p.id !== projectId ? p : { ...p, milestones: [...p.milestones, milestone!] })),
+      )
+
+      if (supabase) {
+        const { error } = await supabase
+          .from('milestones')
+          .insert({ id: milestoneId, project_id: projectId, title: 'Telefonate', sort_order: sortOrder })
+        if (error) console.error('Meilenstein "Telefonate" konnte nicht angelegt werden:', error.message)
+      }
+    }
+
+    const task: Task = {
+      id: crypto.randomUUID(),
+      title: `Telefonat – ${dateLabel}`,
+      status: 'erledigt',
+      prio: 'mittel',
+      kunde: null,
+      abteilung: null,
+      zustaendig: null,
+      naechsterSchritt: null,
+      fragen: null,
+      benoetigteInfos: null,
+      geplanteZeitStunden: null,
+      istZeitStunden: hours,
+      umsatzEuro: null,
+      wiedervorlage: null,
+      erledigtAm: occurredAt.slice(0, 10),
+    }
+
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id !== projectId
+          ? p
+          : {
+              ...p,
+              milestones: p.milestones.map((m) =>
+                m.id !== milestone!.id ? m : { ...m, tasks: [...m.tasks, task] },
+              ),
+            },
+      ),
+    )
+
+    if (supabase) {
+      const { error } = await supabase.from('tasks').insert({
+        id: task.id,
+        milestone_id: milestone.id,
+        title: task.title,
+        status: 'erledigt',
+        prio: 'mittel',
+        ist_zeit_stunden: hours,
+        erledigt_am: task.erledigtAm,
+      })
+      if (error) console.error('Telefonat-Task konnte nicht gespeichert werden:', error.message)
+    }
+  }
+
   function addAgendaAsTask(projectId: string, milestoneId: string, title: string) {
     const newTask: Task = {
       id: crypto.randomUUID(),
@@ -233,5 +344,5 @@ export function useProjects() {
     }
   }
 
-  return { projects, loading, updateTask, moveTask, addAgendaAsTask }
+  return { projects, loading, updateTask, moveTask, addAgendaAsTask, createProject, logCallOnProject }
 }

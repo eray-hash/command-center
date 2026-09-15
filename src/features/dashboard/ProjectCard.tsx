@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { Project, Task, TaskStatus } from '../../types/project'
+import type { RecordingMeta } from '../../types/recording'
 import { MilestoneList } from './MilestoneList'
 import { VoiceCaptureField } from '../agenda/VoiceCaptureField'
+import { ProjectRecordings } from '../recording/ProjectRecordings'
 
 const statusLabel: Record<Project['status'], string> = {
   geplant: 'Geplant',
@@ -26,11 +28,13 @@ const prioColor: Record<Project['prio'], string> = {
 
 export function ProjectCard({
   project,
+  recordings,
   onAddAgendaItem,
   onMoveTask,
   onSaveTask,
 }: {
   project: Project
+  recordings: RecordingMeta[]
   onAddAgendaItem: (text: string, projectId: string) => void
   onMoveTask: (projectId: string, milestoneId: string, taskId: string, status: TaskStatus) => void
   onSaveTask: (projectId: string, milestoneId: string, taskId: string, patch: Partial<Task>) => void
@@ -78,6 +82,8 @@ export function ProjectCard({
         onMoveTask={(milestoneId, taskId, status) => onMoveTask(project.id, milestoneId, taskId, status)}
         onSaveTask={(milestoneId, taskId, patch) => onSaveTask(project.id, milestoneId, taskId, patch)}
       />
+
+      <ProjectRecordings recordings={recordings} />
 
       <div className="border-t border-white/10 pt-2">
         {showCapture ? (
