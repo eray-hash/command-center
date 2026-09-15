@@ -1,9 +1,9 @@
 import type { Project } from '../types/project'
 
-// Bekannte Zusatz-Begriffe pro Projekt, damit Sprachvarianten/Verschreiber erkannt werden
-// (z. B. "Meyer" statt "Mayer" — passiert Eray selbst regelmäßig beim Diktieren).
+// Bekannte Zusatz-Begriffe pro Projekt, damit häufige Sprach-/Verschreib-Varianten
+// direkt (ohne Unschärfe-Suche) erkannt werden.
 const ALIASES: Record<string, string[]> = {
-  'mayer-holding-crm': ['meyer holding', 'meyer', 'mayer', 'holding', 'crm'],
+  'mayer-holding-crm': ['meyer holding', 'meyer', 'mayer', 'maya', 'maier', 'holding', 'crm'],
 }
 
 function normalize(text: string): string {
@@ -16,11 +16,36 @@ function normalize(text: string): string {
     .trim()
 }
 
+// Levenshtein-Distanz (Editierdistanz) — zählt, wie viele Buchstaben eingefügt, gelöscht
+// oder ersetzt werden müssten, um von a nach b zu kommen.
+function levenshtein(a: string, b: string): number {
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0))
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j - 1], dp[i][j - 1], dp[i - 1][j])
+    }
+  }
+  return dp[a.length][b.length]
+}
+
+// Wie tolerant wir bei einem Wort dieser Länge gegenüber Abweichungen sind — Spracherkennung
+// verschreibt Eigennamen wie "Mayer" öfter mal als "Maya", "Meyer", "Maier" etc.
+function toleranceFor(wordLength: number): number {
+  if (wordLength <= 4) return 1
+  if (wordLength <= 7) return 2
+  return 3
+}
+
 export function findProjectForQuery(query: string, projects: Project[]): Project | null {
   const q = normalize(query)
 
+  // 1. Exakter/Teilstring-Treffer auf Name + bekannte Aliase — am zuverlässigsten, zuerst versuchen.
   let best: { project: Project; score: number } | null = null
-
   for (const project of projects) {
     const candidates = [project.name, ...(ALIASES[project.id] ?? [])].map(normalize)
     for (const candidate of candidates) {
@@ -31,8 +56,29 @@ export function findProjectForQuery(query: string, projects: Project[]): Project
       }
     }
   }
+  if (best) return best.project
 
-  return best?.project ?? null
+  // 2. Unscharfer Abgleich pro Wort — fängt Verschreibungen der Spracherkennung ab
+  // (z. B. "Maya" statt "Mayer"), ohne jede Variante von Hand pflegen zu müssen.
+  const queryWords = q.split(' ').filter((w) => w.length >= 3)
+  let fuzzyBest: { project: Project; distance: number } | null = null
+
+  for (const project of projects) {
+    const candidateWords = [project.name, ...(ALIASES[project.id] ?? [])]
+      .flatMap((c) => normalize(c).split(' '))
+      .filter((w) => w.length >= 4)
+
+    for (const candidateWord of candidateWords) {
+      for (const queryWord of queryWords) {
+        const distance = levenshtein(candidateWord, queryWord)
+        if (distance <= toleranceFor(candidateWord.length)) {
+          if (!fuzzyBest || distance < fuzzyBest.distance) fuzzyBest = { project, distance }
+        }
+      }
+    }
+  }
+
+  return fuzzyBest?.project ?? null
 }
 
 const prioLabel: Record<Project['prio'], string> = { niedrig: 'niedriger', mittel: 'mittlerer', hoch: 'hoher' }
