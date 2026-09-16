@@ -17,6 +17,8 @@ export interface Task {
   title: string
   status: TaskStatus
   prio: Priority
+  unterPrio: number | null
+  startDatum: string | null
   kunde: string | null
   abteilung: string | null
   zustaendig: string | null

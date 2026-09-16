@@ -1,87 +1,49 @@
-import type { Project, Task } from '../../types/project'
-
-interface Entry {
-  task: Task
-  projectName: string
-  kind: 'overdue' | 'today' | 'hoch' | 'claude'
-}
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import type { Project } from '../../types/project'
+import { collectPriorityEntries, type PriorityEntry } from '../../lib/todayPriorities'
 
 function weekdayGerman(): string {
   return new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
-function collectEntries(projects: Project[]): { priorities: Entry[]; upcoming: Entry[] } {
-  const today = todayIso()
-  const in7 = new Date()
-  in7.setDate(in7.getDate() + 7)
-  const in7Iso = in7.toISOString().slice(0, 10)
-
-  const priorities: Entry[] = []
-  const upcoming: Entry[] = []
-  const seen = new Set<string>()
-
-  for (const project of projects) {
-    for (const milestone of project.milestones) {
-      for (const task of milestone.tasks) {
-        if (task.status === 'erledigt') continue
-
-        if (task.wiedervorlage && task.wiedervorlage <= today) {
-          priorities.push({ task, projectName: project.name, kind: 'overdue' })
-          seen.add(task.id)
-        } else if (task.wiedervorlage && task.wiedervorlage <= in7Iso) {
-          upcoming.push({ task, projectName: project.name, kind: 'today' })
-        }
-      }
-    }
-  }
-
-  for (const project of projects) {
-    for (const milestone of project.milestones) {
-      for (const task of milestone.tasks) {
-        if (task.status === 'erledigt' || seen.has(task.id)) continue
-        if (task.prio === 'hoch') {
-          priorities.push({ task, projectName: project.name, kind: 'hoch' })
-          seen.add(task.id)
-        } else if (task.fuerClaude) {
-          priorities.push({ task, projectName: project.name, kind: 'claude' })
-          seen.add(task.id)
-        }
-      }
-    }
-  }
-
-  return { priorities, upcoming }
-}
-
-const iconFor: Record<Entry['kind'], string> = {
+const iconFor: Record<PriorityEntry['kind'], string> = {
   overdue: '📞',
   today: '📅',
   hoch: '🔴',
   claude: '🤖',
 }
 
-function EntryRow({ e }: { e: Entry }) {
+function EntryRow({ e, onOpen }: { e: PriorityEntry; onOpen: () => void }) {
   return (
-    <li className="flex items-start gap-2.5 rounded-lg bg-gray-50 px-3 py-2.5 text-sm">
-      <span className="shrink-0">{iconFor[e.kind]}</span>
-      <div className="min-w-0 flex-1">
-        <p className="text-gray-900">{e.task.title}</p>
-        <p className="text-xs text-gray-400">
-          {e.projectName}
-          {e.task.zustaendig ? ` · ${e.task.zustaendig}` : ''}
-          {e.task.wiedervorlage ? ` · ${e.kind === 'overdue' ? 'überfällig seit' : 'fällig'} ${e.task.wiedervorlage}` : ''}
-        </p>
-      </div>
+    <li>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-start gap-2.5 rounded-lg bg-gray-50 px-3 py-2.5 text-left text-sm hover:bg-gray-100"
+      >
+        <span className="shrink-0">{iconFor[e.kind]}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-gray-900">{e.task.title}</p>
+          <p className="text-xs text-gray-400">
+            {e.projectName}
+            {e.task.zustaendig ? ` · ${e.task.zustaendig}` : ''}
+            {e.task.wiedervorlage
+              ? ` · ${e.kind === 'overdue' ? 'überfällig seit' : 'fällig'} ${e.task.wiedervorlage}`
+              : ''}
+          </p>
+        </div>
+      </button>
     </li>
   )
 }
 
-export function TodayPriorities({ projects }: { projects: Project[] }) {
-  const { priorities, upcoming } = collectEntries(projects)
+export function TodayPriorities({
+  projects,
+  onOpenTask,
+}: {
+  projects: Project[]
+  onOpenTask: (entry: PriorityEntry) => void
+}) {
+  const { priorities, upcoming } = collectPriorityEntries(projects)
 
   return (
     <section className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -94,7 +56,7 @@ export function TodayPriorities({ projects }: { projects: Project[] }) {
       ) : (
         <ul className="mb-4 flex flex-col gap-2">
           {priorities.map((e) => (
-            <EntryRow key={e.task.id} e={e} />
+            <EntryRow key={e.task.id} e={e} onOpen={() => onOpenTask(e)} />
           ))}
         </ul>
       )}
@@ -106,7 +68,7 @@ export function TodayPriorities({ projects }: { projects: Project[] }) {
           </summary>
           <ul className="mt-2 flex flex-col gap-2">
             {upcoming.map((e) => (
-              <EntryRow key={e.task.id} e={e} />
+              <EntryRow key={e.task.id} e={e} onOpen={() => onOpenTask(e)} />
             ))}
           </ul>
         </details>

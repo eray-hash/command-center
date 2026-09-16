@@ -13,6 +13,8 @@ function task(
     title,
     status,
     prio: extra.prio ?? 'mittel',
+    unterPrio: extra.unterPrio ?? null,
+    startDatum: extra.startDatum ?? null,
     kunde: extra.kunde ?? null,
     abteilung: extra.abteilung ?? null,
     zustaendig: extra.zustaendig ?? null,

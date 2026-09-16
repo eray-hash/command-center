@@ -88,6 +88,26 @@ export function TaskDetailModal({
             </select>
           </Field>
 
+          <Field label="Unter-Prio (1-9)">
+            <input
+              type="number"
+              min={1}
+              max={9}
+              value={draft.unterPrio ?? ''}
+              onChange={(e) => field('unterPrio', e.target.value ? Number(e.target.value) : null)}
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Start-Datum">
+            <input
+              type="date"
+              value={draft.startDatum ?? ''}
+              onChange={(e) => field('startDatum', e.target.value || null)}
+              className={inputClass}
+            />
+          </Field>
+
           <Field label="Kunde">
             <input
               value={draft.kunde ?? ''}

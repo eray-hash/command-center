@@ -11,12 +11,15 @@ import { useRecordings } from '../../lib/useRecordings'
 import { IdeaCaptureBar } from '../idea/IdeaCaptureBar'
 import { ClaudeHandoffList } from '../claude/ClaudeHandoffList'
 import { TodayPriorities } from '../today/TodayPriorities'
+import { TaskDetailModal } from '../kanban/TaskDetailModal'
+import type { PriorityEntry } from '../../lib/todayPriorities'
 
 export function DashboardScreen() {
   const { projects, loading, moveTask, updateTask, createProject, logCallOnProject, createIdeaTask } = useProjects()
   const { workspaces, selectedId, setSelectedId, addWorkspace } = useWorkspaces()
   const recordings = useRecordings()
   const [toolsOpen, setToolsOpen] = useState<'voice' | 'record' | 'idea' | null>(null)
+  const [openEntry, setOpenEntry] = useState<PriorityEntry | null>(null)
 
   const sharedWorkspaceId = workspaces.find((w) => w.kind === 'gemeinsam')?.id ?? selectedId
 
@@ -66,7 +69,7 @@ export function DashboardScreen() {
         )}
       </header>
 
-      <TodayPriorities projects={projects} />
+      <TodayPriorities projects={projects} onOpenTask={setOpenEntry} />
 
       {/* Schmale Werkzeugleiste: Sprachabfrage / Protokoll / Idee — bewusst klein, damit "Heute" der erste Blickfang bleibt */}
       <div className="mb-6 flex gap-2">
@@ -139,6 +142,14 @@ export function DashboardScreen() {
           onAssignExisting={handleAssignExisting}
           onAssignNew={handleAssignNew}
           onDiscard={() => recordings.removeRecording(nextPendingRecording.id)}
+        />
+      )}
+
+      {openEntry && (
+        <TaskDetailModal
+          task={openEntry.task}
+          onClose={() => setOpenEntry(null)}
+          onSave={(patch) => updateTask(openEntry.projectId, openEntry.milestoneId, openEntry.task.id, patch)}
         />
       )}
     </div>

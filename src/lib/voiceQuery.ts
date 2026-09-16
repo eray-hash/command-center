@@ -1,4 +1,5 @@
 import type { Project } from '../types/project'
+import { collectPriorityEntries, describePriorityEntries } from './todayPriorities'
 
 // Bekannte Zusatz-Begriffe pro Projekt, damit häufige Sprach-/Verschreib-Varianten
 // direkt (ohne Unschärfe-Suche) erkannt werden.
@@ -115,4 +116,51 @@ export function buildProjectAnswer(project: Project): string {
   }
 
   return parts.join(' ')
+}
+
+// Erkennt Fragen nach dem Tagesüberblick ("was habe ich heute zu tun") statt nach einem
+// bestimmten Projekt — rein lokale Stichwort-Erkennung, kein Sprachmodell/keine Kosten.
+const DAY_OVERVIEW_KEYWORDS = [
+  'heute zu tun',
+  'heute alles zu tun',
+  'was steht heute an',
+  'was steht an',
+  'meine prioritaeten',
+  'meine prioritat',
+  'was muss ich heute',
+  'was muss ich tun',
+  'wen muss ich anrufen',
+  'wen soll ich anrufen',
+  'was liegt heute an',
+  'was habe ich heute',
+  'aufgaben heute',
+  'to do liste',
+  'todo liste',
+]
+
+function isDayOverviewQuery(normalizedQuery: string): boolean {
+  return DAY_OVERVIEW_KEYWORDS.some((k) => normalizedQuery.includes(k))
+}
+
+export type VoiceAnswer = { kind: 'day-overview' | 'project' | 'not-found'; text: string }
+
+// Ein Einstiegspunkt für die Sprachabfrage: erst prüfen, ob nach dem Tagesüberblick gefragt
+// wird (Butler-Funktion), sonst nach einem konkreten Projekt suchen.
+export function answerVoiceQuery(query: string, projects: Project[]): VoiceAnswer {
+  const normalized = normalize(query)
+
+  if (isDayOverviewQuery(normalized)) {
+    const { priorities } = collectPriorityEntries(projects)
+    return { kind: 'day-overview', text: describePriorityEntries(priorities) }
+  }
+
+  const project = findProjectForQuery(query, projects)
+  if (project) {
+    return { kind: 'project', text: buildProjectAnswer(project) }
+  }
+
+  return {
+    kind: 'not-found',
+    text: `Ich konnte kein Projekt zu "${query}" finden. Frag z. B. "Wie steht Mayer Holding?" oder "Was habe ich heute zu tun?"`,
+  }
 }

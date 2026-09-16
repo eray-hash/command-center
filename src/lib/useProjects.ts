@@ -12,6 +12,8 @@ interface TaskRow {
   title: string
   status: TaskStatus
   prio: Task['prio']
+  unter_prio: number | null
+  start_datum: string | null
   kunde: string | null
   abteilung: string | null
   zustaendig: string | null
@@ -52,6 +54,8 @@ function blankTask(overrides: Partial<Task> & Pick<Task, 'title'>): Task {
     id: crypto.randomUUID(),
     status: 'offen',
     prio: 'mittel',
+    unterPrio: null,
+    startDatum: null,
     kunde: null,
     abteilung: null,
     zustaendig: null,
@@ -76,6 +80,8 @@ function mapTask(row: TaskRow): Task {
     title: row.title,
     status: row.status,
     prio: row.prio,
+    unterPrio: row.unter_prio,
+    startDatum: row.start_datum,
     kunde: row.kunde,
     abteilung: row.abteilung,
     zustaendig: row.zustaendig,
@@ -122,6 +128,8 @@ function toTaskRowPatch(patch: Partial<Task>): Record<string, unknown> {
     title: 'title',
     status: 'status',
     prio: 'prio',
+    unterPrio: 'unter_prio',
+    startDatum: 'start_datum',
     kunde: 'kunde',
     abteilung: 'abteilung',
     zustaendig: 'zustaendig',
@@ -307,17 +315,9 @@ export function useProjects() {
     )
 
     if (supabase) {
-      const { error } = await supabase.from('tasks').insert({
-        id: task.id,
-        milestone_id: milestoneId,
-        title: task.title,
-        status: task.status,
-        prio: task.prio,
-        ist_zeit_stunden: task.istZeitStunden,
-        erledigt_am: task.erledigtAm,
-        protokoll: task.protokoll,
-        fuer_claude: task.fuerClaude,
-      })
+      const { error } = await supabase
+        .from('tasks')
+        .insert({ id: task.id, milestone_id: milestoneId, ...toTaskRowPatch(task) })
       if (error) console.error('Task konnte nicht gespeichert werden:', error.message)
     }
   }
