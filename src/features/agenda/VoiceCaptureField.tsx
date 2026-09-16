@@ -42,7 +42,7 @@ export function VoiceCaptureField({
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
         placeholder={supported ? `${placeholder} (oder Mikrofon nutzen)` : placeholder}
-        className="min-w-0 flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-teal"
+        className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-teal"
       />
       <button
         type="button"

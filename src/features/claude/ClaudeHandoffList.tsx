@@ -41,15 +41,15 @@ export function ClaudeHandoffList({
         {entries.map((e) => (
           <li
             key={e.taskId}
-            className="flex items-center justify-between gap-2 rounded-md bg-white/5 px-3 py-2 text-sm"
+            className="flex items-center justify-between gap-2 rounded-md bg-white px-3 py-2 text-sm"
           >
             <div>
               <p>{e.title}</p>
-              <span className="text-xs text-white/40">{e.projectName}</span>
+              <span className="text-xs text-gray-400">{e.projectName}</span>
             </div>
             <button
               onClick={() => onUnflag(e.projectId, e.milestoneId, e.taskId)}
-              className="shrink-0 text-xs text-white/40 hover:text-white/70"
+              className="shrink-0 text-xs text-gray-400 hover:text-gray-700"
             >
               Zurücknehmen
             </button>

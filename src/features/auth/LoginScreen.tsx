@@ -36,7 +36,7 @@ export function LoginScreen() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-xl border border-white/10 bg-white/5 p-6">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
         <h1 className="mb-4 text-lg font-bold">Fundament Command Center</h1>
         <div className="flex flex-col gap-3">
           <input
@@ -45,7 +45,7 @@ export function LoginScreen() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-teal"
+            className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-teal"
           />
           <input
             type="password"
@@ -54,7 +54,7 @@ export function LoginScreen() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-teal"
+            className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-teal"
           />
           {error && <p className="text-sm text-red-400">{error}</p>}
           {info && <p className="text-sm text-brand-teal">{info}</p>}
@@ -72,7 +72,7 @@ export function LoginScreen() {
               setError(null)
               setInfo(null)
             }}
-            className="text-xs text-white/40 hover:text-white/70"
+            className="text-xs text-gray-400 hover:text-gray-700"
           >
             {mode === 'login' ? 'Noch kein Konto? Registrieren' : 'Schon ein Konto? Anmelden'}
           </button>

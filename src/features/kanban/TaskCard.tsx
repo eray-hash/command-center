@@ -22,19 +22,19 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: () => void }) {
       {...attributes}
       onClick={onOpen}
       className={`cursor-grab rounded-lg border p-2.5 text-sm active:cursor-grabbing ${
-        task.fuerClaude ? 'border-brand-violet/50 bg-brand-violet/10' : 'border-white/10 bg-white/5'
+        task.fuerClaude ? 'border-brand-violet/50 bg-brand-violet/10' : 'border-gray-200 bg-white'
       } ${isDragging ? 'opacity-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="leading-snug">{task.title}</p>
         <span className={`h-2 w-2 shrink-0 rounded-full ${prioColor[task.prio]}`} title={`Prio: ${task.prio}`} />
       </div>
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-white/40">
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-400">
         {task.fuerClaude && (
           <span className="rounded bg-brand-violet/20 px-1.5 py-0.5 text-brand-violet">🤖 an Claude</span>
         )}
         {task.zustaendig && (
-          <span className="rounded bg-white/10 px-1.5 py-0.5 text-white/60">{task.zustaendig}</span>
+          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600">{task.zustaendig}</span>
         )}
         {task.wiedervorlage && <span>📅 {task.wiedervorlage}</span>}
         {task.fragen && <span title={task.fragen}>❓</span>}

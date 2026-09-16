@@ -31,13 +31,13 @@ export function MilestoneList({
               key={milestone.id}
               type="button"
               onClick={() => setOpenMilestone(milestone)}
-              className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-white/5"
+              className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-gray-50"
             >
-              <span className="text-white/40">›</span>
-              <span className={done === total && total > 0 ? 'text-white/40 line-through' : ''}>
+              <span className="text-gray-400">›</span>
+              <span className={done === total && total > 0 ? 'text-gray-400 line-through' : ''}>
                 {milestone.title}
               </span>
-              <span className="ml-auto shrink-0 text-xs text-white/40">
+              <span className="ml-auto shrink-0 text-xs text-gray-400">
                 {done}/{total}
                 {milestone.eta ? ` · ${milestone.eta}` : ''}
               </span>

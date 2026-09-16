@@ -36,14 +36,14 @@ export function VoiceQuery({ projects }: { projects: Project[] }) {
 
   if (!supported) {
     return (
-      <p className="mb-4 text-xs text-white/30">
+      <p className="mb-4 text-xs text-gray-400">
         Sprachabfrage in diesem Browser nicht verfügbar (Web Speech API fehlt).
       </p>
     )
   }
 
   return (
-    <section className="mb-6 rounded-xl border border-white/10 bg-white/5 p-4">
+    <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -56,22 +56,22 @@ export function VoiceQuery({ projects }: { projects: Project[] }) {
           🎙️
         </button>
         <div className="flex-1">
-          <h2 className="text-sm font-semibold text-white/80">Frag das Dashboard</h2>
-          <p className="text-xs text-white/40">z. B. „Wie steht das Projekt bei Mayer Holding?"</p>
+          <h2 className="text-sm font-semibold text-gray-800">Frag das Dashboard</h2>
+          <p className="text-xs text-gray-400">z. B. „Wie steht das Projekt bei Mayer Holding?"</p>
         </div>
         {speaking && (
-          <button onClick={stopSpeaking} className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-xs">
+          <button onClick={stopSpeaking} className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs">
             ⏹ Stopp
           </button>
         )}
       </div>
 
-      {listening && <p className="mt-3 text-sm text-white/50 italic">Höre zu… „{transcript}"</p>}
+      {listening && <p className="mt-3 text-sm text-gray-500 italic">Höre zu… „{transcript}"</p>}
 
       {!listening && question && (
-        <div className="mt-3 rounded-lg bg-white/5 p-3 text-sm">
-          <p className="text-white/40">Du: {question}</p>
-          <p className="mt-1 text-white/90">{answer}</p>
+        <div className="mt-3 rounded-lg bg-white p-3 text-sm">
+          <p className="text-gray-400">Du: {question}</p>
+          <p className="mt-1 text-gray-900">{answer}</p>
         </div>
       )}
     </section>

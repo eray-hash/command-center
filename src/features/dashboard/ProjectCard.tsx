@@ -43,11 +43,11 @@ export function ProjectCard({
   const pct = total ? Math.round((doneCount / total) * 100) : 0
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="font-semibold leading-tight">{project.name}</h3>
-          <span className="text-xs text-white/50">{project.kind === 'kunde' ? 'Kundenprojekt' : 'Eigenes Projekt'}</span>
+          <span className="text-xs text-gray-500">{project.kind === 'kunde' ? 'Kundenprojekt' : 'Eigenes Projekt'}</span>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium text-white ${statusColor[project.status]}`}>
@@ -60,17 +60,17 @@ export function ProjectCard({
       </div>
 
       {project.currentTask && (
-        <p className="text-sm text-white/70">
-          <span className="text-white/40">Gerade dran: </span>
+        <p className="text-sm text-gray-700">
+          <span className="text-gray-400">Gerade dran: </span>
           {project.currentTask}
         </p>
       )}
 
       <div>
-        <div className="h-1.5 w-full rounded-full bg-white/10">
+        <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div className="h-1.5 rounded-full bg-brand-violet" style={{ width: `${pct}%` }} />
         </div>
-        <div className="mt-1 text-xs text-white/50">{pct}% · {doneCount}/{total} Einzelschritte erledigt</div>
+        <div className="mt-1 text-xs text-gray-500">{pct}% · {doneCount}/{total} Einzelschritte erledigt</div>
       </div>
 
       <MilestoneList
@@ -79,7 +79,7 @@ export function ProjectCard({
         onSaveTask={(milestoneId, taskId, patch) => onSaveTask(project.id, milestoneId, taskId, patch)}
       />
 
-      <div className="border-t border-white/10 pt-2">
+      <div className="border-t border-gray-200 pt-2">
         {showCapture ? (
           <VoiceCaptureField
             placeholder="Neue Idee für dieses Projekt…"
@@ -92,7 +92,7 @@ export function ProjectCard({
           <button
             type="button"
             onClick={() => setShowCapture(true)}
-            className="text-xs text-white/40 hover:text-brand-teal"
+            className="text-xs text-gray-400 hover:text-brand-teal"
           >
             + Idee für dieses Projekt (landet als Task)
           </button>

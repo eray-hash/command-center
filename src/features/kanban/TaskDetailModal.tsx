@@ -3,7 +3,7 @@ import type { Task } from '../../types/project'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1 text-xs text-white/50">
+    <label className="flex flex-col gap-1 text-xs text-gray-500">
       {label}
       {children}
     </label>
@@ -11,7 +11,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputClass =
-  'rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-white outline-none focus:border-brand-teal'
+  'rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 outline-none focus:border-brand-teal'
 
 export function TaskDetailModal({
   task,
@@ -42,7 +42,7 @@ export function TaskDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-[#17171d] p-5"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-5"
       >
         <input
           value={draft.title}
@@ -56,7 +56,7 @@ export function TaskDetailModal({
           className={`mb-4 rounded-full px-3 py-1 text-xs font-medium transition ${
             draft.fuerClaude
               ? 'bg-brand-violet/20 text-brand-violet hover:bg-brand-violet/30'
-              : 'bg-white/10 text-white/60 hover:bg-white/20'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           {draft.fuerClaude ? '🤖 An Claude übergeben — zurücknehmen' : '🤖 An Claude übergeben'}
@@ -208,7 +208,7 @@ export function TaskDetailModal({
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-md px-3 py-1.5 text-sm text-white/50 hover:text-white">
+          <button onClick={onClose} className="rounded-md px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900">
             Abbrechen
           </button>
           <button onClick={save} className="rounded-md bg-brand-violet px-4 py-1.5 text-sm font-medium">

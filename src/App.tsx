@@ -31,7 +31,7 @@ function App() {
   if (checkingSession) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-white/50">Lade…</p>
+        <p className="text-gray-500">Lade…</p>
       </div>
     )
   }

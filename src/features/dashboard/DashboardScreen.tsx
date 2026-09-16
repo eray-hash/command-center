@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { isSupabaseConfigured } from '../../lib/supabaseClient'
 import { ProjectCard } from './ProjectCard'
 import { useProjects } from '../../lib/useProjects'
@@ -9,11 +10,13 @@ import { AssignRecordingModal } from '../recording/AssignRecordingModal'
 import { useRecordings } from '../../lib/useRecordings'
 import { IdeaCaptureBar } from '../idea/IdeaCaptureBar'
 import { ClaudeHandoffList } from '../claude/ClaudeHandoffList'
+import { TodayPriorities } from '../today/TodayPriorities'
 
 export function DashboardScreen() {
   const { projects, loading, moveTask, updateTask, createProject, logCallOnProject, createIdeaTask } = useProjects()
   const { workspaces, selectedId, setSelectedId, addWorkspace } = useWorkspaces()
   const recordings = useRecordings()
+  const [toolsOpen, setToolsOpen] = useState<'voice' | 'record' | 'idea' | null>(null)
 
   const sharedWorkspaceId = workspaces.find((w) => w.kind === 'gemeinsam')?.id ?? selectedId
 
@@ -55,25 +58,45 @@ export function DashboardScreen() {
   return (
     <div className="min-h-screen px-4 py-6 sm:px-6">
       <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">Fundament Command Center</h1>
+        <h2 className="text-sm font-semibold text-gray-400">Fundament Command Center</h2>
         {!isSupabaseConfigured && (
-          <span className="rounded-full bg-amber-600/20 px-3 py-1 text-xs font-medium text-amber-400">
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
             Demo-Modus — keine Datenbank verbunden
           </span>
         )}
       </header>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <VoiceQuery projects={projects} />
-        <RecordingButton onSaved={(transcript, durationSec) => recordings.addRecording(transcript, durationSec)} />
+      <TodayPriorities projects={projects} />
+
+      {/* Schmale Werkzeugleiste: Sprachabfrage / Protokoll / Idee — bewusst klein, damit "Heute" der erste Blickfang bleibt */}
+      <div className="mb-6 flex gap-2">
+        <button
+          onClick={() => setToolsOpen(toolsOpen === 'voice' ? null : 'voice')}
+          className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium ${toolsOpen === 'voice' ? 'border-brand-violet bg-brand-violet/10 text-brand-violet' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'}`}
+        >
+          🎙️ Frag das Dashboard
+        </button>
+        <button
+          onClick={() => setToolsOpen(toolsOpen === 'record' ? null : 'record')}
+          className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium ${toolsOpen === 'record' ? 'border-brand-teal bg-brand-teal/10 text-brand-teal' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'}`}
+        >
+          📝 Protokollieren
+        </button>
+        <button
+          onClick={() => setToolsOpen(toolsOpen === 'idea' ? null : 'idea')}
+          className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium ${toolsOpen === 'idea' ? 'border-brand-violet bg-brand-violet/10 text-brand-violet' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'}`}
+        >
+          💡 Neue Idee
+        </button>
       </div>
 
-      <WorkspaceTabs
-        workspaces={workspaces}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        onCreate={addWorkspace}
-      />
+      {toolsOpen === 'voice' && <VoiceQuery projects={projects} />}
+      {toolsOpen === 'record' && (
+        <RecordingButton onSaved={(transcript, durationSec) => recordings.addRecording(transcript, durationSec)} />
+      )}
+      {toolsOpen === 'idea' && (
+        <IdeaCaptureBar onSubmit={(text) => createIdeaTask(text, null, sharedWorkspaceId)} />
+      )}
 
       <ClaudeHandoffList
         projects={projects}
@@ -82,12 +105,19 @@ export function DashboardScreen() {
         }
       />
 
-      <IdeaCaptureBar onSubmit={(text) => createIdeaTask(text, null, sharedWorkspaceId)} />
+      <h2 className="mb-2 mt-6 text-sm font-semibold text-gray-500">Projektübersicht</h2>
+
+      <WorkspaceTabs
+        workspaces={workspaces}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        onCreate={addWorkspace}
+      />
 
       {loading ? (
-        <p className="text-white/50">Lade Projekte…</p>
+        <p className="text-gray-500">Lade Projekte…</p>
       ) : visibleProjects.length === 0 ? (
-        <p className="text-white/30">Noch keine Projekte in diesem Bereich.</p>
+        <p className="text-gray-400">Noch keine Projekte in diesem Bereich.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleProjects.map((project) => (

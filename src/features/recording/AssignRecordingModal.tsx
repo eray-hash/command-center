@@ -35,22 +35,22 @@ export function AssignRecordingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-sm rounded-xl border border-white/10 bg-[#17171d] p-5">
+      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5">
         <h2 className="mb-1 text-lg font-semibold">Gespräch wurde protokolliert</h2>
-        <p className="mb-3 text-xs text-white/40">
+        <p className="mb-3 text-xs text-gray-400">
           {new Date(recording.createdAt).toLocaleString('de-DE')} · Dauer {minutes}:
           {seconds.toString().padStart(2, '0')} Min. — wird für die Abrechnung als Ist-Zeit hinterlegt.
         </p>
 
-        <div className="mb-4 max-h-40 overflow-y-auto rounded-md bg-white/5 p-3 text-sm text-white/80">
-          {recording.transcript || <span className="text-white/30">Kein Text erkannt.</span>}
+        <div className="mb-4 max-h-40 overflow-y-auto rounded-md bg-white p-3 text-sm text-gray-800">
+          {recording.transcript || <span className="text-gray-400">Kein Text erkannt.</span>}
         </div>
 
-        <label className="mb-1 block text-xs text-white/50">Welchem Projekt/Kunden zuordnen?</label>
+        <label className="mb-1 block text-xs text-gray-500">Welchem Projekt/Kunden zuordnen?</label>
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
-          className="mb-2 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-teal"
+          className="mb-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-teal"
         >
           <option value="">— Noch unklar / sonstiges —</option>
           {projects.map((p) => (
@@ -67,12 +67,12 @@ export function AssignRecordingModal({
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Name des neuen Kunden/Projekts"
-            className="mb-4 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-brand-teal"
+            className="mb-4 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-teal"
           />
         )}
 
         <div className="mt-2 flex justify-end gap-2">
-          <button onClick={onDiscard} className="rounded-md px-3 py-1.5 text-sm text-white/50 hover:text-white">
+          <button onClick={onDiscard} className="rounded-md px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900">
             Löschen
           </button>
           <button

@@ -29,7 +29,7 @@ export function WorkspaceTabs({
           key={ws.id}
           onClick={() => onSelect(ws.id)}
           className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-            selectedId === ws.id ? 'bg-brand-violet text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'
+            selectedId === ws.id ? 'bg-brand-violet text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
           }`}
         >
           {ws.name}
@@ -44,7 +44,7 @@ export function WorkspaceTabs({
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitCreate()}
             placeholder="Name des Bereichs"
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm outline-none focus:border-brand-teal"
+            className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-brand-teal"
           />
           <button onClick={submitCreate} className="rounded-full bg-brand-teal px-3 py-1.5 text-sm">
             ✓
@@ -53,7 +53,7 @@ export function WorkspaceTabs({
       ) : (
         <button
           onClick={() => setCreating(true)}
-          className="rounded-full border border-dashed border-white/20 px-3 py-1.5 text-sm text-white/40 hover:text-white/70"
+          className="rounded-full border border-dashed border-gray-300 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-700"
         >
           + Bereich
         </button>
